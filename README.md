@@ -25,9 +25,9 @@ manual review. In every version the reviewer can:
    mandatory.
 4. **Trust the history** — every submission, assignment, flag and decision is logged with
    who did it, why, and when.
-5. **Not undo a final decision** — *Approved* and *Escalated* are final; the decision controls
-   lock and the back end refuses further changes. *Info requested* keeps the case open for
-   a follow-up decision.
+5. **Rely on final decisions** — once a case is *Approved* or *Escalated* it is closed: the
+   decision controls lock and the back end refuses further changes. *Info requested* keeps
+   the case open for a follow-up decision.
 
 All three versions hold the same eight synthetic cases (see [Seed data](#seed-data)). Each part
 below has a short screen recording of the flow.
