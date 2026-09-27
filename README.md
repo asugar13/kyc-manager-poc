@@ -123,13 +123,14 @@ cases are locked).
    (`plugins/model-apps`, `build-model-app.js --apply --publish --verify`) reads the spec and creates every artifact — solution, views, form, commands, web resource, app module —
    through the Dataverse Web API as a service principal, then reads them back to verify.
    **No Studio, no browser, no human in the loop.**
-3. `powerapps-model/postbuild.mts` applies the finishing touches the builder does not
-   (default view, keyword search, form script).
-
-The reason-required and final-state rules live in `powerapps-model/kyc_casecommands.js`
-(form `onload` / `onchange` handlers) rather than as Dataverse business rules: this
-environment rejects every business-rule creation with HTTP 400. `powerapps-model/workflow-log.md`
-records what was run and what failed.
+3. A small script (`powerapps-model/postbuild.mts`) then sets the details the generator
+   can't: which view opens by default, which columns the search box looks at, and wiring up
+   the form script.
+4. Two rules — a decision needs a written reason, and approved/escalated cases can't be
+   changed — are implemented as a short script on the case form
+   (`powerapps-model/kyc_casecommands.js`). The usual no-code way to do this in Dataverse
+   ("business rules") could not be created in this environment, so the script is the
+   fallback. `powerapps-model/workflow-log.md` is the diary of what was run and what failed.
 
 ---
 
