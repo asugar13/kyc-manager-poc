@@ -29,7 +29,8 @@ manual review. In every version the reviewer can:
    lock and the back end refuses further changes. *Info requested* keeps the case open for
    a follow-up decision.
 
-All three versions hold the same eight synthetic cases (see [Seed data](#seed-data)).
+All three versions hold the same eight synthetic cases (see [Seed data](#seed-data)). Each part
+below has a short screen recording of the flow.
 
 ---
 
@@ -44,6 +45,8 @@ All three versions hold the same eight synthetic cases (see [Seed data](#seed-da
 
 The front end talks to the API over JSON (`/api/...`); the API validates every decision and
 writes the status change and the history entry in one SQLite transaction.
+
+![Part A walkthrough: queue, case detail, decision with reason, locked final state](docs/media/part-a-web-app.webp)
 
 ### Run it
 
@@ -116,6 +119,8 @@ Sign in to <https://make.powerapps.com> with an account that has access to that 
 and select it in the environment switcher (top right). **Tables → KYC Case / Verification
 Check / KYC Case Activity** show the seeded records.
 
+![Part B walkthrough: canvas app queue and case detail in the Power Apps player](docs/media/part-b-canvas-app.webp)
+
 ### How it was built
 
 1. **Data first.** The three Dataverse tables were created by scripts in `dataverse/`
@@ -152,6 +157,8 @@ powerapps-coauthored/
 **App:** *KYC Review (model-driven)*, same environment and tables as Part B.
 
 - Play: <https://org64ad231d.crm11.dynamics.com/main.aspx?appid=79defb02-eb8a-47ae-bdbf-e4a466dc89ff>
+
+![Part B′ walkthrough: model-driven queue view, case form and command-bar decision](docs/media/part-b-prime-model-driven.webp)
 
 ### How it was built
 
