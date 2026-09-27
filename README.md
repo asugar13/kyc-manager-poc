@@ -84,7 +84,8 @@ Check / KYC Case Activity** show the seeded records.
    identical data.
 2. **App authored as source.** A Power Apps Studio tab is opened on the app and signed in by
    a person; Microsoft's Canvas Authoring MCP server attaches to that live *coauthoring
-   session*. The screens are written as `.pa.yaml` files, validated and pushed with
+   session* (the `canvas-app` skill from the same [power-platform-skills](https://github.com/microsoft/power-platform-skills)
+   repo). The screens are written as `.pa.yaml` files, validated and pushed with
    `compile_canvas`, and the server-normalised source is pulled back with `sync_canvas`.
    The result is a real app that opens in Studio, publishes and plays — and committable
    source rather than an opaque `.msapp`.
@@ -118,8 +119,8 @@ cases are locked).
    (Review queue / Flagged cases / All cases / Case history / Checks), the case form with
    verification-check and history sub-grids, and the Approve / Request information / Escalate
    command-bar buttons.
-2. Microsoft's `model-apps` builder (`build-model-app.js --apply --publish --verify`) reads the
-   spec and creates every artifact — solution, views, form, commands, web resource, app module —
+2. The `app-builder` skill from Microsoft's [power-platform-skills](https://github.com/microsoft/power-platform-skills)
+   (`plugins/model-apps`, `build-model-app.js --apply --publish --verify`) reads the spec and creates every artifact — solution, views, form, commands, web resource, app module —
    through the Dataverse Web API as a service principal, then reads them back to verify.
    **No Studio, no browser, no human in the loop.**
 3. `powerapps-model/postbuild.mts` applies the finishing touches the builder does not
