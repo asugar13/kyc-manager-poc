@@ -1,14 +1,15 @@
 # KYC Review Queue
 
 The same internal compliance tool built three ways, so the approaches can be compared
-side by side — plus a fourth, Part C, that runs the Part A code *inside* Power Apps:
+side by side — plus a fourth, Part C, which takes the Part A screens and runs them inside
+Power Apps:
 
 | | What it is | How it was built | Where it runs |
 |---|---|---|---|
 | **Part A** | Custom web app: React + TypeScript front end, Node/Express API, SQLite | Written as ordinary code in this Git repository | Locally: `npm install && npm run dev` |
 | **Part B** | Power Apps **canvas** app on Dataverse | Authored as `.pa.yaml` source with the [`canvas-app` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/canvas-apps) from Microsoft's power-platform-skills — its Canvas Authoring MCP server, connected to a live Power Apps Studio session | Power Apps (links below) |
 | **Part B′** | Power Apps **model-driven** app on the same Dataverse tables | Generated headlessly from a JSON app spec with the [`app-builder` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/model-apps) from Microsoft's power-platform-skills, through the Dataverse API — no Studio, no browser | Power Apps (links below) |
-| **Part C** | Power Apps **code app** (preview): the Part A React front end, unchanged, on the same Dataverse tables | Ordinary code in this repository (`codeapp/`), published headlessly with Microsoft's [Power Apps CLI](https://learn.microsoft.com/power-apps/developer/code-apps/) as a service principal | Power Apps (link below) |
+| **Part C** | Power Apps **code app** (preview): the Part A screens, with no server of their own, reading and writing the same Dataverse tables | The Part A React code, plus a thin data layer that talks to Dataverse; published from this repository (`codeapp/`) with Microsoft's Power Apps CLI | Power Apps (link below) |
 
 **Built with Devin.** All three parts were built by [Devin](https://devin.ai), Cognition's AI
 software engineer, from a written brief. Devin wrote the Part A code and tests, the Dataverse
@@ -142,43 +143,34 @@ cases are locked).
 
 ---
 
-## Part C — the Part A front end as a Power Apps code app
+## Part C — the Part A screens as a Power Apps code app
 
-**App:** *KYC Review Queue (code app)*, same environment and tables as Part B.
+**App:** *KYC Review Queue (code app)*, same environment and tables as Parts B and B′.
 
 - Play: <https://apps.powerapps.com/play/e/b76846b4-0c24-e4d8-952c-46ffa09ad6a8/app/c7ac350b-c374-4e15-9d24-90915780f640?tenantId=c6a3b549-494b-4711-b35d-2671b4f06cde>
 
-[Code apps](https://learn.microsoft.com/power-apps/developer/code-apps/) (preview) let an
-ordinary web app run inside Power Apps: Power Apps hosts it, signs the user in, applies the
-environment's Dataverse security roles and DLP policies, and provides the data connections.
-Part C takes the Part A React client as-is — same pages, components and styles — and swaps the
-JSON API adapter (`client/src/api.ts`) for one that talks to the `kyc_*` Dataverse tables through
-the Power Apps SDK (`codeapp/src/api.ts`). There is no Express server and no SQLite; the "acting
-as" dropdown is replaced by the signed-in Power Apps user.
+![Part C: the Part A review queue running inside the Power Apps player, signed in as a Power Apps user](docs/media/part-c-code-app.png)
 
-### How it was built
+Parts A and B/B′ look like a straight choice between writing code and using Power Apps. Part C
+is the middle ground. Power Apps has a preview feature called
+[code apps](https://learn.microsoft.com/power-apps/developer/code-apps/) that lets a normal web
+front end run inside Power Apps, using its data rather than a server of its own.
 
-1. `pa app init` (the npm `@microsoft/power-apps-cli`) registers the app in the environment and
-   writes `codeapp/power.config.json`.
-2. `pa app add data-source --connector dataverse --table kyc_case` (and the two other tables)
-   generates typed models and CRUD services under `codeapp/src/generated/` from the live table
-   metadata.
-3. `npm run build -w codeapp && pa app push` builds the Vite bundle and publishes it. Both steps
-   ran **headlessly as the service principal** (`PA_CLI_USE_SP_AUTH=true` plus the `PA_CLI_SP_*`
-   variables), after the principal was registered as a Power Platform management app
-   (`pac admin application register`) and the environment admin turned on *Power Apps code
-   apps* in the admin centre (Settings → Product → Features).
+So Part C is the Part A front end — the same screens, the same React code — with the Node/Express
+server and SQLite database removed. Where Part A asked its own API for cases, Part C reads and
+writes the Dataverse tables that Parts B and B′ use, through the connection Power Apps provides.
+Power Apps also handles sign-in: the reviewer is whoever is signed in, so the "acting as"
+dropdown from Part A is gone, and the environment's security roles and data policies apply as
+they do to any other Power App.
 
-Local development is `pa app run` from `codeapp/`, which serves the Vite dev server behind the
-Power Apps player. What is committed: the app source, `power.config.json` (environment and app
-ids — no secrets) and the generated `.power/` and `src/generated/` files, so `npm run build -w
-codeapp && pa app push` from a clean clone republishes the same app.
+The code lives in `codeapp/` and is published from the command line with Microsoft's Power Apps
+CLI, with no Studio session involved — see [`codeapp/README.md`](codeapp/README.md) for the
+commands.
 
-**Caveats.** Code apps are in preview; running one in production needs Power Apps Premium (or
-pay-as-you-go) for each end user, which the developer environment used here does not test. As in
-Parts B and B′, the decision and the history row are two separate Dataverse writes from the
-browser and the reason-required / final-state rules run in the client — Part A's API-side
-enforcement and single transaction do not carry over without a server or Dataverse plugin.
+**Worth knowing.** Code apps are still in preview, and running one for real users needs a
+premium Power Apps licence, which was not tested here. And because there is no server, the
+"reason required" and "final decisions are final" rules run in the browser, as they do in Parts
+B and B′ — Part A is the only version that enforces them server-side.
 
 ---
 
@@ -200,9 +192,7 @@ npm run seed -w dataverse        # the eight cases (idempotent; add `-- --reset`
 Then, for Part B′: run the `model-apps` builder against `powerapps-model/app-spec.json`, followed
 by `node powerapps-model/postbuild.mts` (same `PP_*` variables). Part B is rebuilt by pushing
 `powerapps-coauthored/app-src/` through the Canvas Authoring MCP server with a Studio session open.
-Part C is rebuilt with `npm run build -w codeapp && npx pa app push` from `codeapp/`
-(`PA_CLI_USE_SP_AUTH=true`, `PA_CLI_SP_CLIENT_ID`, `PA_CLI_SP_CLIENT_SECRET`, `PA_CLI_SP_TENANT_ID`,
-`PA_CLI_ENVIRONMENT_ID`).
+Part C is republished as described in [`codeapp/README.md`](codeapp/README.md).
 
 ---
 
