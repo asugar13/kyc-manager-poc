@@ -6,8 +6,8 @@ side by side:
 | | What it is | How it was built | Where it runs |
 |---|---|---|---|
 | **Part A** | Custom web app: React + TypeScript front end, Node/Express API, SQLite | Written as ordinary code in this Git repository | Locally: `npm install && npm run dev` |
-| **Part B** | Power Apps **canvas** app on Dataverse | Authored as `.pa.yaml` source through Microsoft's Canvas Authoring MCP server, connected to a live Power Apps Studio session | Power Apps (links below) |
-| **Part B′** | Power Apps **model-driven** app on the same Dataverse tables | Generated headlessly from a JSON app spec through the Dataverse API — no Studio, no browser | Power Apps (links below) |
+| **Part B** | Power Apps **canvas** app on Dataverse | Authored as `.pa.yaml` source with the [`canvas-app` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/canvas-apps) from Microsoft's power-platform-skills — its Canvas Authoring MCP server, connected to a live Power Apps Studio session | Power Apps (links below) |
+| **Part B′** | Power Apps **model-driven** app on the same Dataverse tables | Generated headlessly from a JSON app spec with the [`app-builder` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/model-apps) from Microsoft's power-platform-skills, through the Dataverse API — no Studio, no browser | Power Apps (links below) |
 
 **All data is synthetic.** Names, documents, addresses and check results are invented.
 
