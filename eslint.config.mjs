@@ -3,11 +3,11 @@ import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/**', '**/dist/**', 'server/data/**'] },
+  { ignores: ['**/node_modules/**', '**/dist/**', 'server/data/**', 'codeapp/src/generated/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['client/src/**/*.{ts,tsx}'],
+    files: ['client/src/**/*.{ts,tsx}', 'codeapp/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     rules: reactHooks.configs.recommended.rules,
   },

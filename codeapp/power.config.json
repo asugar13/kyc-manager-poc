@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "appId": "c7ac350b-c374-4e15-9d24-90915780f640",
+  "appDisplayName": "KYC Review Queue (code app)",
+  "region": "prod",
+  "appType": "CodeApp",
+  "environmentId": "b76846b4-0c24-e4d8-952c-46ffa09ad6a8",
+  "description": "Part C: the Part A React client running as a Power Apps code app on the kyc_* Dataverse tables",
+  "buildPath": "dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "kyccases": {
+          "entitySetName": "kyc_cases",
+          "logicalName": "kyc_case",
+          "isHidden": false
+        },
+        "verificationchecks": {
+          "entitySetName": "kyc_verificationchecks",
+          "logicalName": "kyc_verificationcheck",
+          "isHidden": false
+        },
+        "kyccaseactivities": {
+          "entitySetName": "kyc_caseactivities",
+          "logicalName": "kyc_caseactivity",
+          "isHidden": false
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
+}
