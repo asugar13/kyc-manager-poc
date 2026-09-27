@@ -1,18 +1,19 @@
 # KYC Review Queue
 
 The same internal compliance tool built three ways, so the approaches can be compared
-side by side:
+side by side — plus a fourth, Part C, that runs the Part A code *inside* Power Apps:
 
 | | What it is | How it was built | Where it runs |
 |---|---|---|---|
 | **Part A** | Custom web app: React + TypeScript front end, Node/Express API, SQLite | Written as ordinary code in this Git repository | Locally: `npm install && npm run dev` |
 | **Part B** | Power Apps **canvas** app on Dataverse | Authored as `.pa.yaml` source with the [`canvas-app` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/canvas-apps) from Microsoft's power-platform-skills — its Canvas Authoring MCP server, connected to a live Power Apps Studio session | Power Apps (links below) |
 | **Part B′** | Power Apps **model-driven** app on the same Dataverse tables | Generated headlessly from a JSON app spec with the [`app-builder` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/model-apps) from Microsoft's power-platform-skills, through the Dataverse API — no Studio, no browser | Power Apps (links below) |
+| **Part C** | Power Apps **code app** (preview): the Part A React front end, unchanged, on the same Dataverse tables | Ordinary code in this repository (`codeapp/`), published headlessly with Microsoft's [Power Apps CLI](https://learn.microsoft.com/power-apps/developer/code-apps/) as a service principal | Power Apps (link below) |
 
 **Built with Devin.** All three parts were built by [Devin](https://devin.ai), Cognition's AI
 software engineer, from a written brief. Devin wrote the Part A code and tests, the Dataverse
 provisioning and seed scripts, the canvas app's `.pa.yaml` source and the model-driven app spec,
-and deployed Parts B and B′ to the Power Platform environment. The author set the scope, signed
+and deployed Parts B, B′ and C to the Power Platform environment. The author set the scope, signed
 in to Power Apps Studio where a person was required, reviewed every pull request and tested each
 app, sending back the issues that Devin then fixed (for example gallery layout and column names
 in Part B, and the default queue view in Part B′). The recordings in each section show the
@@ -38,7 +39,7 @@ manual review. In every version the reviewer can:
    further decision can be recorded. *Info requested* keeps the case open for a follow-up
    decision.
 
-All three versions hold the same eight synthetic cases (see [docs/seed-data.md](docs/seed-data.md)). Each part
+All versions hold the same eight synthetic cases (see [docs/seed-data.md](docs/seed-data.md)). Each part
 below has a short screen recording of the flow.
 
 ---
@@ -141,9 +142,49 @@ cases are locked).
 
 ---
 
+## Part C — the Part A front end as a Power Apps code app
+
+**App:** *KYC Review Queue (code app)*, same environment and tables as Part B.
+
+- Play: <https://apps.powerapps.com/play/e/b76846b4-0c24-e4d8-952c-46ffa09ad6a8/app/c7ac350b-c374-4e15-9d24-90915780f640?tenantId=c6a3b549-494b-4711-b35d-2671b4f06cde>
+
+[Code apps](https://learn.microsoft.com/power-apps/developer/code-apps/) (preview) let an
+ordinary web app run inside Power Apps: Power Apps hosts it, signs the user in, applies the
+environment's Dataverse security roles and DLP policies, and provides the data connections.
+Part C takes the Part A React client as-is — same pages, components and styles — and swaps the
+JSON API adapter (`client/src/api.ts`) for one that talks to the `kyc_*` Dataverse tables through
+the Power Apps SDK (`codeapp/src/api.ts`). There is no Express server and no SQLite; the "acting
+as" dropdown is replaced by the signed-in Power Apps user.
+
+### How it was built
+
+1. `pa app init` (the npm `@microsoft/power-apps-cli`) registers the app in the environment and
+   writes `codeapp/power.config.json`.
+2. `pa app add data-source --connector dataverse --table kyc_case` (and the two other tables)
+   generates typed models and CRUD services under `codeapp/src/generated/` from the live table
+   metadata.
+3. `npm run build -w codeapp && pa app push` builds the Vite bundle and publishes it. Both steps
+   ran **headlessly as the service principal** (`PA_CLI_USE_SP_AUTH=true` plus the `PA_CLI_SP_*`
+   variables), after the principal was registered as a Power Platform management app
+   (`pac admin application register`) and the environment admin turned on *Power Apps code
+   apps* in the admin centre (Settings → Product → Features).
+
+Local development is `pa app run` from `codeapp/`, which serves the Vite dev server behind the
+Power Apps player. What is committed: the app source, `power.config.json` (environment and app
+ids — no secrets) and the generated `.power/` and `src/generated/` files, so `npm run build -w
+codeapp && pa app push` from a clean clone republishes the same app.
+
+**Caveats.** Code apps are in preview; running one in production needs Power Apps Premium (or
+pay-as-you-go) for each end user, which the developer environment used here does not test. As in
+Parts B and B′, the decision and the history row are two separate Dataverse writes from the
+browser and the reason-required / final-state rules run in the client — Part A's API-side
+enforcement and single transaction do not carry over without a server or Dataverse plugin.
+
+---
+
 ## Rebuilding the Dataverse side
 
-Parts B and B′ share three Dataverse tables (`kyc_case`, `kyc_verificationcheck`,
+Parts B, B′ and C share three Dataverse tables (`kyc_case`, `kyc_verificationcheck`,
 `kyc_caseactivity`), created and seeded by scripts in `dataverse/`, authenticated as a
 service principal that is an application user in the environment:
 
@@ -159,6 +200,9 @@ npm run seed -w dataverse        # the eight cases (idempotent; add `-- --reset`
 Then, for Part B′: run the `model-apps` builder against `powerapps-model/app-spec.json`, followed
 by `node powerapps-model/postbuild.mts` (same `PP_*` variables). Part B is rebuilt by pushing
 `powerapps-coauthored/app-src/` through the Canvas Authoring MCP server with a Studio session open.
+Part C is rebuilt with `npm run build -w codeapp && npx pa app push` from `codeapp/`
+(`PA_CLI_USE_SP_AUTH=true`, `PA_CLI_SP_CLIENT_ID`, `PA_CLI_SP_CLIENT_SECRET`, `PA_CLI_SP_TENANT_ID`,
+`PA_CLI_ENVIRONMENT_ID`).
 
 ---
 
@@ -170,7 +214,8 @@ by `node powerapps-model/postbuild.mts` (same `PP_*` variables). Part B is rebui
 - No "reject" decision: the three actions (approve / request info / escalate) were chosen to
   keep the pilot small.
 - The three versions hold the same eight synthetic cases, but as separate datasets (SQLite for
-  Part A, Dataverse for B and B′). Nothing here demonstrates migrating an existing Power App or
+  Part A, Dataverse for B, B′ and C). Nothing here demonstrates migrating an existing Power App or
   its live data.
-- Parts B and B′ exist only in the developer environment they were built in; there is no
+- Parts B, B′ and C exist only in the developer environment they were built in; there is no
   exported solution package to install them anywhere else.
+- Part C relies on a preview feature (code apps) and its end-user licensing was not tested.
