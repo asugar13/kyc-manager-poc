@@ -91,6 +91,11 @@ Check / KYC Case Activity** show the seeded records.
 3. **Constraint:** the Studio tab must stay open and signed in throughout; the process is
    agent-driven but not unattended.
 
+![Part B being built: the agent session on the left edits .pa.yaml and calls compile_canvas; the live app in the Power Apps player on the right picks up the change](docs/media/part-b-coauthoring-session.png)
+
+*Building Part B: agent session on the left, the live Studio coauthoring session it is driving on
+the right.*
+
 Source lives in `powerapps-coauthored/` (`REPORT.md` has the notes on what worked and what did
 not). Two screens: the queue (search + status filter over `KYC Cases`, flag and risk markers) and
 the case detail (applicant fields, checks, history, required-reason input, Approve / Request
