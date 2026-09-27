@@ -60,19 +60,6 @@ npm run dev        # API on :3001, UI on http://localhost:5173
 On first start the API creates `server/data/kyc.sqlite` and seeds the eight cases. The file
 is kept between restarts, so decisions and history persist.
 
-Single-port, production-style run:
-
-```bash
-npm run build      # builds client/dist
-npm start          # http://localhost:3001 serves both the API and the built UI
-```
-
-`npm test`, `npm run lint` and `npm run typecheck` do what they say; `npm run seed` wipes and
-reseeds the database.
-
-The **Acting as** selector in the header picks which reviewer decisions are recorded under —
-there is no authentication in the prototype.
-
 ---
 
 ## Part B — Power Apps canvas app
