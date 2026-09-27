@@ -180,4 +180,5 @@ by `node powerapps-model/postbuild.mts` (same `PP_*` variables). Part B is rebui
 - Verification checks are static seed data, not calls to a real KYC provider.
 - Part A uses a single SQLite file — fine for a prototype, not for multi-instance deployment.
 - No "reject" decision: the brief asked for approve / request info / escalate only.
-- Parts B and B′ live in one developer environment; nothing is packaged for ALM/deployment.
+- Parts B and B′ exist only in the developer environment they were built in; there is no
+  exported solution package to install them anywhere else.
