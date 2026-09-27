@@ -127,10 +127,8 @@ cases are locked).
    can't: which view opens by default, which columns the search box looks at, and wiring up
    the form script.
 4. Two rules — a decision needs a written reason, and approved/escalated cases can't be
-   changed — are implemented as a short script on the case form
-   (`powerapps-model/kyc_casecommands.js`). The usual no-code way to do this in Dataverse
-   ("business rules") could not be created in this environment, so the script is the
-   fallback. `powerapps-model/workflow-log.md` is the diary of what was run and what failed.
+   changed — are enforced by a short script on the case form
+   (`powerapps-model/kyc_casecommands.js`).
 
 ---
 
