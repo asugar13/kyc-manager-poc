@@ -67,43 +67,11 @@ npm run build      # builds client/dist
 npm start          # http://localhost:3001 serves both the API and the built UI
 ```
 
-Other commands:
-
-```bash
-npm test           # 11 API / decision / persistence tests
-npm run lint
-npm run typecheck
-npm run seed       # wipe and reseed the database
-```
-
-Optional environment variables: `PORT` (API port, default `3001`), `KYC_DB_PATH` (SQLite
-file, default `server/data/kyc.sqlite`).
+`npm test`, `npm run lint` and `npm run typecheck` do what they say; `npm run seed` wipes and
+reseeds the database.
 
 The **Acting as** selector in the header picks which reviewer decisions are recorded under —
 there is no authentication in the prototype.
-
-### API
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/health` | Liveness + case count |
-| GET | `/api/meta` | Statuses, decision actions, reviewer list |
-| GET | `/api/cases?status=&q=` | Queue; `status` is `all` or a status, `q` matches applicant or case ID |
-| GET | `/api/cases/:id` | Case detail with applicant, checks and history |
-| POST | `/api/cases/:id/decisions` | Body `{ action, reason, reviewer }` → `201` updated case, `400` invalid, `404` unknown, `409` case already final |
-
-### Code layout
-
-```
-client/            React front end
-  src/pages/       QueuePage, CasePage
-  src/api.ts       typed fetch wrapper
-server/            Express API
-  src/db.ts        schema, CaseRepository, decision validation
-  src/seed.ts      the eight synthetic cases (shared with Dataverse seeding)
-  src/app.ts       routes + error handling
-  test/            node:test suite
-```
 
 ---
 
@@ -136,19 +104,11 @@ Check / KYC Case Activity** show the seeded records.
 3. **Constraint:** the Studio tab must stay open and signed in throughout; the process is
    agent-driven but not unattended.
 
-Two screens: the queue (search + status filter over `KYC Cases`, flag and risk markers) and
+Source lives in `powerapps-coauthored/` (`REPORT.md` has the notes on what worked and what did
+not). Two screens: the queue (search + status filter over `KYC Cases`, flag and risk markers) and
 the case detail (applicant fields, checks, history, required-reason input, Approve / Request
 info / Escalate buttons that `Patch` the case and append an activity row; Approved / Escalated
 cases are locked).
-
-### Files
-
-```
-powerapps-coauthored/
-  app-src/       .pa.yaml as authored and pushed via compile_canvas
-  synced-src/    .pa.yaml as normalised by the service (pulled via sync_canvas)
-  REPORT.md      what worked, what didn't, and how this compares to hand-packing an .msapp
-```
 
 ---
 
@@ -170,38 +130,20 @@ powerapps-coauthored/
    spec and creates every artifact — solution, views, form, commands, web resource, app module —
    through the Dataverse Web API as a service principal, then reads them back to verify.
    **No Studio, no browser, no human in the loop.**
-3. `powerapps-model/postbuild.mts` finishes what the builder does not redo on a rebuild:
-   refreshes the form script, makes *Review queue* the default view, adds a Quick Find that
-   searches case reference / applicant / email / reviewer, and retires the stock views.
+3. `powerapps-model/postbuild.mts` applies the finishing touches the builder does not
+   (default view, keyword search, form script).
 
 The reason-required and final-state rules live in `powerapps-model/kyc_casecommands.js`
 (form `onload` / `onchange` handlers) rather than as Dataverse business rules: this
-environment rejects every business-rule creation with HTTP 400.
-
-### Files
-
-```
-powerapps-model/
-  app-spec.json          source of truth for the app
-  model-app-plan.md      human-readable design, generated from the spec
-  kyc_casecommands.js    command-bar actions + form rules
-  postbuild.mts          idempotent post-build fixes
-  workflow-log.md        what was run, what failed, what was changed
-```
+environment rejects every business-rule creation with HTTP 400. `powerapps-model/workflow-log.md`
+records what was run and what failed.
 
 ---
 
 ## Rebuilding the Dataverse side
 
-Parts B and B′ share three Dataverse tables (publisher prefix `kyc`):
-
-| Table | Purpose | Key columns |
-|---|---|---|
-| `kyc_case` (KYC Cases) | one applicant case | Case reference, Applicant name, Submitted at, Status, Assigned reviewer, Review reason, Risk level, Flagged, Decided at |
-| `kyc_verificationcheck` | simulated screening results | Check, Result (Pass / Warn / Fail), Detail, Order, Case |
-| `kyc_caseactivity` | chronological history | Summary, Action, Reason, Reviewer, Occurred at, Case |
-
-They are created and seeded by scripts (Node 22+, no extra dependencies), authenticated as a
+Parts B and B′ share three Dataverse tables (`kyc_case`, `kyc_verificationcheck`,
+`kyc_caseactivity`), created and seeded by scripts in `dataverse/`, authenticated as a
 service principal that is an application user in the environment:
 
 ```bash
