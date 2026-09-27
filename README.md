@@ -140,7 +140,74 @@ server/            Express API
   src/app.ts       routes + error handling
   src/index.ts     entrypoint
   test/            node:test suite
+powerapps-coauthored/  Power Apps canvas app source (.pa.yaml) + MCP report
+dataverse/
+  scripts/schema.ts      Dataverse tables, columns, choices, relationships
+  scripts/provision.ts   creates publisher, solution, tables (Web API, idempotent)
+  scripts/seed.ts        seeds the synthetic cases (reuses server/src/seed.ts)
 ```
+
+## Power Apps version (part B)
+
+The same workflow is also built as a **Power Apps canvas app backed by Dataverse**,
+so the two stacks can be compared side by side. The app — **KYC Review Queue
+coauthored** (`6344a16e-0ddd-4083-b5eb-518f13f4116d`) — is authored through the
+Microsoft canvas-authoring MCP server against a live Studio coauthoring session,
+and the `.pa.yaml` source lives under `powerapps-coauthored/` (`app-src/` is the
+authored source, `synced-src/` the server-normalized snapshot, `REPORT.md` the
+notes on what worked and what did not).
+
+### Open it in the maker portal
+
+The app is deployed to the provisioned environment `https://org64ad231d.crm11.dynamics.com`
+(environment id `b76846b4-0c24-e4d8-952c-46ffa09ad6a8`, UK region).
+
+1. Sign in to <https://make.powerapps.com> with an account that has access to that
+   environment and pick it in the environment switcher (top right).
+2. Open **KYC Review Queue coauthored** with **Edit** to load it in Power Apps
+   Studio, or **Play** to run it. Direct links:
+   - Edit: <https://make.powerapps.com/environments/b76846b4-0c24-e4d8-952c-46ffa09ad6a8/apps/6344a16e-0ddd-4083-b5eb-518f13f4116d>
+   - Play: <https://apps.powerapps.com/play/e/b76846b4-0c24-e4d8-952c-46ffa09ad6a8/a/6344a16e-0ddd-4083-b5eb-518f13f4116d?tenantId=c6a3b549-494b-4711-b35d-2671b4f06cde>
+3. **Tables → KYC Case / Verification Check / KYC Case Activity** show the seeded
+   synthetic records (same 8 applicants as the SQLite seed, `KYC-1042` and `KYC-1045`
+   flagged).
+
+Dataverse schema (publisher prefix `kyc`):
+
+| Table | Purpose | Key columns |
+|---|---|---|
+| `kyc_case` (KYC Cases) | one applicant case | Case reference, Applicant name, Submitted at, Case status (Pending / Info requested / Approved / Escalated), Assigned reviewer, Review reason, Risk level, Flagged, Decided at |
+| `kyc_verificationcheck` | simulated screening results | Check, Result (Pass / Warn / Fail), Detail, Order, Case (lookup) |
+| `kyc_caseactivity` | chronological history | Summary, Action, Reason, Reviewer, Occurred at, Case (lookup) |
+
+### Rebuilding the Dataverse side
+
+The tables and seed data are created by scripts under `dataverse/` (Node 22+, no
+dependencies beyond the repo), authenticated as a service principal that is an
+application user in the environment:
+
+```bash
+export PP_ENV_URL=https://org64ad231d.crm11.dynamics.com
+export PP_TENANT_ID=c6a3b549-494b-4711-b35d-2671b4f06cde
+export PP_CLIENT_ID=... PP_CLIENT_SECRET=...
+
+npm run provision -w dataverse   # idempotent: publisher, solution, tables, columns, relationships
+npm run seed -w dataverse        # idempotent; add `-- --reset` to wipe and reseed the 8 cases
+```
+
+`scripts/schema.ts` is the single definition of the schema (it mirrors
+`server/src/db.ts`); `seed.ts` reuses `SEED_CASES` from `server/src/seed.ts`, so
+both stacks hold the same synthetic data.
+
+App behaviour mirrors part A: the queue screen filters by status and searches by
+applicant name or case reference; the detail screen shows the applicant fields, the
+simulated checks and the history in time order; **Approve**, **Request more
+information** and **Escalate** all require a written reason
+(`Patch` on `KYC Cases` plus a new `KYC Case Activities` row); approved and escalated
+cases are final and the decision controls are disabled.
+
+Out of scope, as in part A: real identity verification, real PII, non-Dataverse
+connectors and production polish.
 
 ## Known limitations
 
