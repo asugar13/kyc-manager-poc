@@ -9,6 +9,15 @@ side by side:
 | **Part B** | Power Apps **canvas** app on Dataverse | Authored as `.pa.yaml` source with the [`canvas-app` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/canvas-apps) from Microsoft's power-platform-skills — its Canvas Authoring MCP server, connected to a live Power Apps Studio session | Power Apps (links below) |
 | **Part B′** | Power Apps **model-driven** app on the same Dataverse tables | Generated headlessly from a JSON app spec with the [`app-builder` skill](https://github.com/microsoft/power-platform-skills/tree/main/plugins/model-apps) from Microsoft's power-platform-skills, through the Dataverse API — no Studio, no browser | Power Apps (links below) |
 
+**Built with Devin.** All three parts were built by [Devin](https://devin.ai), Cognition's AI
+software engineer, from a written brief. Devin wrote the Part A code and tests, the Dataverse
+provisioning and seed scripts, the canvas app's `.pa.yaml` source and the model-driven app spec,
+and deployed Parts B and B′ to the Power Platform environment. The author set the scope, signed
+in to Power Apps Studio where a person was required, reviewed every pull request and tested each
+app, sending back the issues that Devin then fixed (for example gallery layout and column names
+in Part B, and the default queue view in Part B′). The recordings in each section show the
+finished apps; the Part B screenshot shows Devin driving Studio mid-build.
+
 **All data is synthetic.** Names, documents, addresses and check results are invented.
 
 ## The workflow
@@ -23,13 +32,15 @@ manual review. In every version the reviewer can:
    (pass / review / fail) and the case's activity history.
 3. **Decide** — *Approve*, *Request more information* or *Escalate*. A written reason is
    mandatory.
-4. **Trust the history** — every submission, assignment, flag and decision is logged with
+4. **See the history** — every submission, assignment, flag and decision is logged with
    who did it, why, and when.
-5. **Rely on final decisions** — once a case is *Approved* or *Escalated* it is closed: the
-   decision controls lock and the back end refuses further changes. *Info requested* keeps
-   the case open for a follow-up decision.
+5. **Rely on final decisions** — once a case is *Approved* or *Escalated* it is closed and the
+   decision controls are disabled. Part A additionally enforces this in its API (a further
+   decision is rejected) and writes the status change and the history entry in one
+   transaction; Parts B and B′ enforce it in the app and write the two records separately.
+   *Info requested* keeps the case open for a follow-up decision.
 
-All three versions hold the same eight synthetic cases (see [Seed data](#seed-data)). Each part
+All three versions hold the same eight synthetic cases (see [docs/seed-data.md](docs/seed-data.md)). Each part
 below has a short screen recording of the flow.
 
 ---
@@ -153,24 +164,15 @@ by `node powerapps-model/postbuild.mts` (same `PP_*` variables). Part B is rebui
 
 ---
 
-## Seed data
-
-| Case | Applicant | Status | Why it is in the queue |
-|---|---|---|---|
-| KYC-1041 | Amelia Hartley | pending | Ordinary case: random QA sample, all checks pass |
-| KYC-1042 | Viktor Sokolov | pending | **Flagged**: sanctions fuzzy match, address check failed |
-| KYC-1043 | Chidera Nwosu | info_requested | Document expires within 30 days |
-| KYC-1044 | Marta Kowalczyk | approved | Selfie match below auto-approve threshold (already decided) |
-| KYC-1045 | Daniel Okonkwo-Reyes | escalated | Confirmed PEP (already escalated) |
-| KYC-1046 | Sofia Andersson | pending | Third onboarding attempt in 30 days |
-| KYC-1047 | Rahul Mehta | pending | Declared income inconsistent with occupation |
-| KYC-1048 | Grace O'Sullivan | pending | Large initial deposit, source of funds required |
-
 ## Known limitations
 
 - No authentication or authorisation in Part A; the acting reviewer is chosen from a dropdown.
 - Verification checks are static seed data, not calls to a real KYC provider.
 - Part A uses a single SQLite file — fine for a prototype, not for multi-instance deployment.
-- No "reject" decision: the brief asked for approve / request info / escalate only.
+- No "reject" decision: the three actions (approve / request info / escalate) were chosen to
+  keep the pilot small.
+- The three versions hold the same eight synthetic cases, but as separate datasets (SQLite for
+  Part A, Dataverse for B and B′). Nothing here demonstrates migrating an existing Power App or
+  its live data.
 - Parts B and B′ exist only in the developer environment they were built in; there is no
   exported solution package to install them anywhere else.
