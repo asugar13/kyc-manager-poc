@@ -3,12 +3,8 @@
     "target": "es2022",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "lib": [
-      "es2023"
-    ],
-    "types": [
-      "node"
-    ],
+    "lib": ["es2023"],
+    "types": ["node"],
     "strict": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
@@ -19,7 +15,5 @@
     "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "scripts"
-  ]
+  "include": ["scripts", "../powerapps-model/*.mts"]
 }
