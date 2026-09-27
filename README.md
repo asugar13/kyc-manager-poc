@@ -34,11 +34,9 @@ manual review. In every version the reviewer can:
    mandatory.
 4. **See the history** — every submission, assignment, flag and decision is logged with
    who did it, why, and when.
-5. **Rely on final decisions** — once a case is *Approved* or *Escalated* it is closed and the
-   decision controls are disabled. Part A additionally enforces this in its API (a further
-   decision is rejected) and writes the status change and the history entry in one
-   transaction; Parts B and B′ enforce it in the app and write the two records separately.
-   *Info requested* keeps the case open for a follow-up decision.
+5. **Rely on final decisions** — once a case is *Approved* or *Escalated* it is closed and no
+   further decision can be recorded. *Info requested* keeps the case open for a follow-up
+   decision.
 
 All three versions hold the same eight synthetic cases (see [docs/seed-data.md](docs/seed-data.md)). Each part
 below has a short screen recording of the flow.
