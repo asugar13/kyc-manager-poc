@@ -241,7 +241,7 @@ export const api = {
 
     const now = new Date().toISOString();
     const actionLabel = Kyc_caseactivitiesModel.Kyc_caseactivitieskyc_action[ACTION_VALUE[body.action]!];
-    unwrap(
+    const activity = unwrap(
       await Kyc_caseactivitiesService.create({
         kyc_name: `${actionLabel} by ${body.reviewer}`,
         kyc_action: ACTION_VALUE[body.action]!,
@@ -253,13 +253,15 @@ export const api = {
       }),
       'Recording decision',
     );
-    unwrap(
-      await Kyc_casesService.update(current.kyc_caseid, {
-        kyc_status: STATUS_VALUE[nextStatus],
-        ...(FINAL_STATUSES.includes(nextStatus) ? { kyc_decidedat: now } : {}),
-      }),
-      'Updating case',
-    );
+    const updated = await Kyc_casesService.update(current.kyc_caseid, {
+      kyc_status: STATUS_VALUE[nextStatus],
+      ...(FINAL_STATUSES.includes(nextStatus) ? { kyc_decidedat: now } : {}),
+    });
+    if (!updated.success) {
+      // best-effort compensation so a failed status change does not leave a phantom decision
+      await Kyc_caseactivitiesService.delete(activity.kyc_caseactivityid).catch(() => undefined);
+      unwrap(updated, 'Updating case');
+    }
     return api.getCase(reference);
   },
 };

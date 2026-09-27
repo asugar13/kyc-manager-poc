@@ -15,10 +15,17 @@ const dateOnly = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'UTC',
 });
 
+function parse(iso: string): Date | null {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 export function formatDateTime(iso: string): string {
-  return dateTime.format(new Date(iso));
+  const d = parse(iso);
+  return d ? dateTime.format(d) : '—';
 }
 
 export function formatDate(iso: string): string {
-  return dateOnly.format(new Date(iso));
+  const d = parse(iso);
+  return d ? dateOnly.format(d) : '—';
 }
