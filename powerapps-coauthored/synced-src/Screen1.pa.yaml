@@ -136,10 +136,10 @@ Screens:
                             Control: Badge
                             Properties:
                               Appearance: ='BadgeCanvas.Appearance'.Filled
+                              BasePaletteColor: =If(ThisItem.kyc_status = 'Status (KYC Cases)'.Pending, RGBA(234, 179, 8, 1), If(ThisItem.kyc_status = 'Status (KYC Cases)'.'Info requested', RGBA(234, 88, 12, 1), If(ThisItem.kyc_status = 'Status (KYC Cases)'.Approved, RGBA(22, 163, 74, 1), RGBA(17, 24, 39, 1))))
                               Content: =If(ThisItem.kyc_status = 'Status (KYC Cases)'.Pending, "Pending", If(ThisItem.kyc_status = 'Status (KYC Cases)'.'Info requested', "Info requested", If(ThisItem.kyc_status = 'Status (KYC Cases)'.Approved, "Approved", "Escalated")))
                               Height: =28
                               Shape: ='BadgeCanvas.Shape'.Rounded
-                              ThemeColor: =If(ThisItem.kyc_status = 'Status (KYC Cases)'.Pending, 'BadgeCanvas.ThemeColor'.Warning, If(ThisItem.kyc_status = 'Status (KYC Cases)'.'Info requested', 'BadgeCanvas.ThemeColor'.Severe, If(ThisItem.kyc_status = 'Status (KYC Cases)'.Approved, 'BadgeCanvas.ThemeColor'.Success, 'BadgeCanvas.ThemeColor'.Important)))
                               Width: =130
                               X: =Parent.Width - 140
                               Y: =18
